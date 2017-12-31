@@ -2,42 +2,32 @@ package main
 
 import (
 	"fmt"
-
-	"github.com/gorilla/websocket"
 )
 
-type UserConn struct {
-	User *User
-	Conn *websocket.Conn
-	Chat *Chat
-}
-
 type User struct {
-	ID   int
+	ID   string
 	Name string
 }
 
-func NewUserConn(conn *websocket.Conn) *UserConn {
-	u := &User{
-		1,
+func NewUser() (*User, error) {
+	newId, err := generateKey(8)
+	if err != nil {
+		return nil, err
+	}
+	return &User{
+		string(newId),
 		"anonymous",
-	}
-	uc := UserConn{
-		u,
-		conn,
-		nil,
-	}
-	return &uc
+	}, nil
 }
 
-func (uc *UserConn) Read(r *Router) {
-	var p *Packet
+func (ss *Session) Read(s *Server) {
+	var e *Event
 	for {
-		if err := uc.Conn.ReadJSON(p); err != nil {
+		if err := ss.Conn.ReadJSON(e); err != nil {
 			fmt.Println(err)
 			break
 		}
-		r.RoutePacket(uc, p)
+		s.HandleEvent(ss, e)
 	}
-	r.DisconnectUser(uc.User.ID)
+	s.EndSession(ss)
 }

@@ -1,43 +1,31 @@
 package main
 
-import (
-	"time"
-)
-
 type Chat struct {
+	ID        string
 	Name      string
-	Broadcast chan Packet
-	Users     []UserConn
+	Broadcast chan *Event
+	Owner     *User
 }
 
-type Message struct {
-	User      int
-	Timestamp time.Time
-	Chat      *Chat
-	Text      string
-}
-
-func NewChat(name string) *Chat {
+func NewChat(name string, owner *User) (*Chat, error) {
+	newId, err := generateKey(8)
+	if err != nil {
+		return nil, err
+	}
 	return &Chat{
+		string(newId),
 		name,
-		make(chan Packet),
-		[]UserConn{},
-	}
+		make(chan *Event),
+		owner,
+	}, nil
 }
 
-func NewMessage(u User, t string) *Message {
-	return &Message{
-		u.ID,
-		time.Now(),
-		nil,
-		t,
-	}
-}
-
-func (c *Chat) Write(r *Router) {
-	for p := range c.Broadcast {
-		for _, u := range c.Users {
-			u.Conn.WriteJSON(p)
+func (c *Chat) Write(s *Server) {
+	for e := range c.Broadcast {
+		for _, ss := range s.Sessions {
+			if ss.Chat == c {
+				ss.Conn.WriteJSON(e)
+			}
 		}
 	}
 }
