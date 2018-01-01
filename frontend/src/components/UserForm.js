@@ -7,7 +7,18 @@ import '../styles/userform.css'
 export default class extends Component {
 
   state = {
-    text: 'anonymous'
+    text: 'Anonymous'
+  }
+
+  constructor() {
+    super()
+  }
+
+  componentWillReceiveProps(props) {
+    const { name = 'Anonymous' } = props.user
+    this.setState({
+      text: name
+    })
   }
 
   onChange = e => {

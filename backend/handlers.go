@@ -13,7 +13,7 @@ type NewChatRequest struct {
 }
 
 type SetUserRequest struct {
-	UserID int    `json:"userId"`
+	UserID string `json:"userId"`
 	Name   string `json:"name"`
 }
 
@@ -40,9 +40,22 @@ type AuthenticationResponse struct {
 func registerHandlers(s *Server) {
 	s.Handle("new_chat", handleNewChat)
 	s.Handle("new_message", handleNewMessage)
-	s.Handle("set_user", handleSetUser)
+	s.Handle("set_user", authTest(handleSetUser))
 	s.Handle("subscribe_chat", handleSubscribeChat)
 	s.Handle("authenticate", handleAuthentication)
+}
+
+func authTest(eh EventHandler) EventHandler {
+	return func(s *Server, ss *Session, e *Event) {
+		if ss.User != nil {
+			eh(s, ss, e)
+		} else {
+			ss.Send <- &Event{
+				"failed_authentication",
+				nil,
+			}
+		}
+	}
 }
 
 func handleNewChat(s *Server, ss *Session, e *Event) {
@@ -60,6 +73,7 @@ func handleNewChat(s *Server, ss *Session, e *Event) {
 }
 
 func handleNewMessage(s *Server, ss *Session, e *Event) {
+	fmt.Println(e.Type, "event triggered")
 	var req NewMessageRequest
 	if err := mapstructure.Decode(e.Data, &req); err != nil {
 		fmt.Println(err)
@@ -84,8 +98,27 @@ func handleSetUser(s *Server, ss *Session, e *Event) {
 		fmt.Println(err)
 		return
 	}
+	evt := &Event{
+		"set_user",
+		&SetUserRequest{
+			ss.User.ID,
+			req.Name,
+		},
+	}
 	ss.User.Name = req.Name
-	// BROADCAST LOGIC
+	sentMap := make(map[string]bool)
+	sentMap[ss.User.ID] = true
+	ss.Send <- evt
+	for _, c := range ss.User.Chats {
+		for _, u := range c.Users {
+			if _, sent := sentMap[u.ID]; !sent {
+				if uss, fss := s.Sessions[u.ID]; fss {
+					uss.Send <- evt
+				}
+				sentMap[u.ID] = true
+			}
+		}
+	}
 }
 
 func handleSubscribeChat(s *Server, ss *Session, e *Event) {
@@ -116,13 +149,10 @@ func handleAuthentication(s *Server, ss *Session, e *Event) {
 			fmt.Println(err)
 			return
 		}
-		err = ss.Conn.WriteJSON(&Event{
+		ss.User = u
+		ss.Send <- &Event{
 			"authenticate",
 			&AuthenticationResponse{u.ID, u.Name, t},
-		})
-		if err != nil {
-			fmt.Println(err)
-			return
 		}
 		s.NewUser(u)
 	} else {
@@ -131,13 +161,10 @@ func handleAuthentication(s *Server, ss *Session, e *Event) {
 			fmt.Println(err)
 			return
 		}
-		err = ss.Conn.WriteJSON(&Event{
+		ss.User = u
+		ss.Send <- &Event{
 			"authenticate",
 			&AuthenticationResponse{u.ID, u.Name, req.Token},
-		})
-		if err != nil {
-			fmt.Println(err)
-			return
 		}
 	}
 }

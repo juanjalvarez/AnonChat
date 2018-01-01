@@ -36,6 +36,7 @@ func NewServer() (*Server, error) {
 		make(map[string]*Chat),
 	}
 	registerHandlers(s)
+	fmt.Println("Constructing new server...")
 	return s, nil
 }
 
@@ -43,6 +44,7 @@ func (s *Server) Handle(event string, eh EventHandler) {
 	s.Lock()
 	s.Handlers[event] = eh
 	s.Unlock()
+	fmt.Println("Registered handler for '", event, "'")
 }
 
 func (s *Server) HandleEvent(ss *Session, e *Event) {
@@ -60,12 +62,14 @@ func (s *Server) NewChat(chat *Chat) {
 	s.Lock()
 	s.Chats[chat.Name] = chat
 	s.Unlock()
+	fmt.Println("Registered new chat:", chat.Name)
 }
 
 func (s *Server) NewUser(u *User) {
 	s.Lock()
 	s.Users[u.ID] = u
 	s.Unlock()
+	fmt.Println("Registered new user:", u.Name)
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -86,4 +90,5 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ss := NewSession(socket)
 	go ss.Read(s)
 	go ss.Write(s)
+	fmt.Println("Serving new connection")
 }

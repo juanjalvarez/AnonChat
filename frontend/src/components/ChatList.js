@@ -5,7 +5,10 @@ import ChatItem from './ChatItem'
 export default class extends Component {
 
   handleSelectChat = id => {
-    console.log(id)
+    const { onSelectChat } = this.props
+    if (onSelectChat) {
+      onSelectChat(id)
+    }
   }
 
   render() {

@@ -23,8 +23,13 @@ func NewSession(conn *websocket.Conn) *Session {
 
 func (ss *Session) Read(s *Server) {
 	var e Event
+	var err error
 	for {
-		if err := ss.Conn.ReadJSON(&e); err != nil {
+		if err != nil {
+			fmt.Println(err)
+			break
+		}
+		if err = ss.Conn.ReadJSON(&e); err != nil {
 			fmt.Println(err)
 			break
 		}
@@ -42,6 +47,7 @@ func (ss *Session) Write(s *Server) {
 			break
 		}
 	}
+	s.EndSession(ss)
 }
 
 func (ss *Session) Authenticate(u *User) {

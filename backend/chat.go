@@ -44,4 +44,5 @@ func (c *Chat) SubscribeUser(u *User) {
 	c.Lock()
 	c.Users[u.ID] = u
 	c.Unlock()
+	u.RegisterChat(c)
 }

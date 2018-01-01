@@ -1,5 +1,7 @@
 import React, { Component } from 'react'
 
+import Socket from '../shared/Socket'
+
 import UserForm from '../components/UserForm'
 import ChatList from '../components/ChatList'
 
@@ -8,17 +10,13 @@ import '../styles/app.css'
 export default class extends Component {
 
   state = {
-    activeChat: false,
+    user: null,
+    activeChat: null,
     chats: {
       a: {
         id: 'abc123',
         name: 'AnonChat Evangelists',
-        users: {
-          '1': {
-            id: '1',
-            name: 'Jane Doe'
-          }
-        },
+        users: ["1"],
         messages: [
           {
             userId: '1',
@@ -27,28 +25,83 @@ export default class extends Component {
         ],
         notifications: 4
       }
+    },
+    cachedUsers: {
+      "1": {
+        id: '1',
+        name: 'Jane Doe'
+      }
     }
   }
 
+  constructor() {
+    super()
+    const token = localStorage.getItem('anonChatToken')
+    const ws = this.socket = new Socket('ws://localhost:4000')
+    let payload = {
+      newUser: true
+    }
+    if (Boolean(token)) {
+      payload = {
+        token
+      }
+    }
+    ws.send({
+      type: 'authenticate',
+      data: payload
+    })
+    ws.on('authenticate', data => {
+      localStorage.setItem('anonChatToken', data.token)
+      this.setState({
+        user: {
+          id: data.id,
+          name: data.name
+        }
+      })
+    })
+    ws.on('set_user', data => {
+      if (data.userId === this.state.user.id) {
+        this.setState({
+          user: {
+            ...data
+          }
+        })
+      }
+    })
+  }
+
   handleUserChange = name => {
-    console.log(name)
+    this.socket.send({
+      type: 'set_user',
+      data: {
+        name
+      }
+    })
+  }
+
+  handleChatChange = id => {
+    this.setState({
+      activeChat: id
+    })
   }
   
   render() {
+    const hasActiveChat = Boolean(this.state.activeChat)
     return (
       <div className="app-container">
-        <div className={`app-nav ${this.state.activeChat ? 'unfocus' : ''}`}>
+        <div className={`app-nav ${hasActiveChat ? 'unfocus' : ''}`}>
           <UserForm
             onSubmit={this.handleUserChange}
+            user={this.state.user}
           />
           <ChatList
             chats={this.state.chats}
+            onSelectChat={this.handleChatChange}
           />
-          <button onClick={() => {this.setState({activeChat: true})}}>enter chat</button>
         </div>
-        <div className={`app-body ${this.state.activeChat ? '' : 'unfocus'}`}>
+        <div className={`app-body ${hasActiveChat ? '' : 'unfocus'}`}>
           body
-          <button onClick={() => this.setState({activeChat: false})}>back</button>
+          <button onClick={() => this.setState({activeChat: null})}>back</button>
         </div>
       </div>
     )
