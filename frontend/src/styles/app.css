@@ -5,11 +5,29 @@
 
 .app-nav {
   flex-basis: 25%;
-  background-color: red;
   height: 100vh;
+  border-right: 1px solid black;
 }
 
 .app-body {
   flex-basis: 75%;
-  background-color: blue;
+}
+
+@media screen and (max-width: 900px) {
+  .app-nav {
+    flex-basis: 30%;
+  }
+  .app-body {
+    flex-basis: 70%;
+  }
+}
+
+@media screen and (max-width: 700px) {
+  .app-nav, .app-body {
+    flex-basis: 100%;
+  }
+
+  .app-container > .unfocus {
+    display: none;
+  }
 }
