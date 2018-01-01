@@ -1,0 +1,15 @@
+.app-container {
+  display: flex;
+  flex-direction: row;
+}
+
+.app-nav {
+  flex-basis: 25%;
+  background-color: red;
+  height: 100vh;
+}
+
+.app-body {
+  flex-basis: 75%;
+  background-color: blue;
+}
