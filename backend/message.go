@@ -1,10 +1,10 @@
 package main
 
 type Message struct {
-	Author string
-	Text   string
+	UserID string `json:"userId"`
+	Text   string `json:"text"`
 }
 
-func NewMessage(author string, text string) *Message {
-	return &Message{author, text}
+func NewMessage(userID string, chatID string, text string) *Message {
+	return &Message{userID, text}
 }

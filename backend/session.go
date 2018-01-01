@@ -1,22 +1,49 @@
 package main
 
-import "github.com/gorilla/websocket"
+import (
+	"fmt"
+
+	"github.com/gorilla/websocket"
+)
 
 type Session struct {
 	User *User
 	Conn *websocket.Conn
-	Chat *Chat
+	Send chan *Event
 }
 
-func NewSession(conn *websocket.Conn) (*Session, error) {
-	u, err := NewUser()
-	if err != nil {
-		return nil, err
-	}
+func NewSession(conn *websocket.Conn) *Session {
 	ss := Session{
-		u,
-		conn,
 		nil,
+		conn,
+		make(chan *Event),
 	}
-	return &ss, nil
+	return &ss
+}
+
+func (ss *Session) Read(s *Server) {
+	var e Event
+	for {
+		if err := ss.Conn.ReadJSON(&e); err != nil {
+			fmt.Println(err)
+			break
+		}
+		s.HandleEvent(ss, &e)
+	}
+	s.EndSession(ss)
+}
+
+func (ss *Session) Write(s *Server) {
+	var err error
+	for e := range ss.Send {
+		err = ss.Conn.WriteJSON(e)
+		if err != nil {
+			fmt.Println(err)
+			break
+		}
+	}
+}
+
+func (ss *Session) Authenticate(u *User) {
+	ss.User = u
 }

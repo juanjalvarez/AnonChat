@@ -4,37 +4,39 @@ import (
 	"errors"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/mitchellh/mapstructure"
 )
 
-type Token struct {
+type Claim struct {
 	ID string `json:"id"`
 }
 
-func GenerateToken(s *Server, id string) (*Token, error) {
-	_, f := s.Users[id]
-	if !f {
-		return nil, errors.New("User does not exist")
-	}
+func GenerateToken(s *Server, u *User) (string, error) {
 	t := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"id": id,
+		"id": u.ID,
 	})
 	tokenString, err := t.SignedString(s.PrivateKey)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	return &Token{
-		tokenString,
-	}, nil
+	return tokenString, nil
 }
 
-func Authenticate(s *Server, token *Token) (*User, error) {
-	u, f := s.Users[token.ID]
+func Authenticate(s *Server, t string) (*User, error) {
+	tok, err := jwt.Parse(t, func(t *jwt.Token) (interface{}, error) {
+		return s.PrivateKey, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	var c Claim
+	err = mapstructure.Decode(tok.Claims, &c)
+	if err != nil {
+		return nil, err
+	}
+	u, f := s.Users[c.ID]
 	if !f {
-		nu, err := NewUser()
-		if err != nil {
-			return nil, err
-		}
-		u = nu
+		return nil, errors.New("User with ID " + c.ID + " does not exist")
 	}
 	return u, nil
 }

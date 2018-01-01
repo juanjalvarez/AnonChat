@@ -9,10 +9,7 @@ import (
 func loadPrivateKey(path string) ([]byte, error) {
 	key, err := ioutil.ReadFile(path)
 	if err != nil {
-		return nil, err
-	}
-	if err != nil {
-		key, err = generateKey(64)
+		key, err = GenerateKey(64)
 		if err != nil {
 			return nil, err
 		}
@@ -24,10 +21,10 @@ func loadPrivateKey(path string) ([]byte, error) {
 	return key, nil
 }
 
-func generateKey(len int) ([]byte, error) {
-	key, err := rsa.GenerateKey(rand.Reader, 32*len)
+func GenerateKey(len int) ([]byte, error) {
+	key, err := rsa.GenerateKey(rand.Reader, 4*len)
 	if err != nil {
 		return nil, err
 	}
-	return []byte(key.D.Text(32)), nil
+	return []byte(key.D.Text(16)), nil
 }
