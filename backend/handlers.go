@@ -12,6 +12,12 @@ type NewChatRequest struct {
 	Name string `json:"name"`
 }
 
+type NewChatResponse struct {
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Owner string `json:"owner"`
+}
+
 type SetUserRequest struct {
 	UserID string `json:"userId"`
 	Name   string `json:"name"`
@@ -70,6 +76,11 @@ func handleNewChat(s *Server, ss *Session, e *Event) {
 		return
 	}
 	s.NewChat(nc)
+	ss.User.RegisterChat(nc)
+	ss.Send <- &Event{
+		"chat_status",
+		nc.GenerateStatus(s),
+	}
 }
 
 func handleNewMessage(s *Server, ss *Session, e *Event) {
@@ -105,6 +116,7 @@ func handleSetUser(s *Server, ss *Session, e *Event) {
 			req.Name,
 		},
 	}
+	fmt.Println("Changing name for", ss.User.UniqueIdentifier(), "to", req.Name)
 	ss.User.Name = req.Name
 	sentMap := make(map[string]bool)
 	sentMap[ss.User.ID] = true
@@ -138,8 +150,10 @@ func handleAuthentication(s *Server, ss *Session, e *Event) {
 		fmt.Println(err)
 		return
 	}
+	var u *User
+	var err error
 	if req.NewUser {
-		u, err := NewUser()
+		u, err = NewUser()
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -156,7 +170,7 @@ func handleAuthentication(s *Server, ss *Session, e *Event) {
 		}
 		s.NewUser(u)
 	} else {
-		u, err := Authenticate(s, req.Token)
+		u, err = Authenticate(s, req.Token)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -167,4 +181,7 @@ func handleAuthentication(s *Server, ss *Session, e *Event) {
 			&AuthenticationResponse{u.ID, u.Name, req.Token},
 		}
 	}
+	fmt.Println("User", u.UniqueIdentifier(), "authenticated")
+	s.NewSession(ss)
+	u.SendChats(s)
 }

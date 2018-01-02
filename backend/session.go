@@ -30,7 +30,6 @@ func (ss *Session) Read(s *Server) {
 			break
 		}
 		if err = ss.Conn.ReadJSON(&e); err != nil {
-			fmt.Println(err)
 			break
 		}
 		s.HandleEvent(ss, &e)
@@ -43,7 +42,6 @@ func (ss *Session) Write(s *Server) {
 	for e := range ss.Send {
 		err = ss.Conn.WriteJSON(e)
 		if err != nil {
-			fmt.Println(err)
 			break
 		}
 	}

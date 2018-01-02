@@ -11,6 +11,13 @@ type Chat struct {
 	Users     map[string]*User
 }
 
+type ChatStatus struct {
+	ID    string        `json:"id"`
+	Name  string        `json:"name"`
+	Owner string        `json:"owner"`
+	Users []*UserStatus `json:"users"`
+}
+
 func NewChat(name string, owner *User) (*Chat, error) {
 	newID, err := GenerateKey(8)
 	if err != nil {
@@ -44,5 +51,12 @@ func (c *Chat) SubscribeUser(u *User) {
 	c.Lock()
 	c.Users[u.ID] = u
 	c.Unlock()
-	u.RegisterChat(c)
+}
+
+func (c *Chat) GenerateStatus(s *Server) *ChatStatus {
+	users := []*UserStatus{}
+	for _, u := range c.Users {
+		users = append(users, u.GenerateStatus(s))
+	}
+	return &ChatStatus{c.ID, c.Name, c.Owner.ID, users}
 }

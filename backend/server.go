@@ -55,21 +55,31 @@ func (s *Server) HandleEvent(ss *Session, e *Event) {
 	}
 }
 
+func (s *Server) NewSession(ss *Session) {
+	s.Lock()
+	s.Sessions[ss.User.ID] = ss
+	s.Unlock()
+	fmt.Println("New session for user", ss.User.UniqueIdentifier())
+}
+
 func (s *Server) EndSession(ss *Session) {
+	s.Lock()
+	delete(s.Sessions, ss.User.ID)
+	s.Unlock()
+	ss.Conn.Close()
+	fmt.Println("Terminating session for user", ss.User.UniqueIdentifier())
 }
 
 func (s *Server) NewChat(chat *Chat) {
 	s.Lock()
 	s.Chats[chat.Name] = chat
 	s.Unlock()
-	fmt.Println("Registered new chat:", chat.Name)
 }
 
 func (s *Server) NewUser(u *User) {
 	s.Lock()
 	s.Users[u.ID] = u
 	s.Unlock()
-	fmt.Println("Registered new user:", u.Name)
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -90,5 +100,4 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ss := NewSession(socket)
 	go ss.Read(s)
 	go ss.Write(s)
-	fmt.Println("Serving new connection")
 }
