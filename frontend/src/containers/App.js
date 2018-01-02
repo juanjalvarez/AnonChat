@@ -56,10 +56,25 @@ export default class extends Component {
     })
     ws.on('chat_status', data => {
       const chats = this.state.chats
-      const messages = chats[data.id] ? chats[data.id] : []
       const nc = new Chat(data.id, data.name, data.owner)
       nc.users = data.users
+      if (chats[data.id]) {
+        nc.notificatios = chats[data.id].notifications
+        nc.messages = chats[data.id].messages
+      }
       chats[data.id] = nc
+      this.setState({
+        chats
+      })
+    })
+    ws.on('message', data => {
+      const chats = this.state.chats
+      const messages = chats[data.chatId] ? chats[data.chatId].messages : []
+      messages.push(data)
+      chats[data.chatId].messages = messages
+      if (data.chatId !== this.state.activeChat) {
+        chats[data.chatId].notifications++
+      }
       this.setState({
         chats
       })
@@ -77,7 +92,20 @@ export default class extends Component {
 
   handleChatChange = id => {
     this.setState({
-      activeChat: id
+      activeChat: id,
+      chats: {
+        ...this.state.chats,
+        [id]: {
+          ...this.state.chats[id],
+          notifications: 0
+        }
+      }
+    })
+  }
+
+  handleGoBack = () => {
+    this.setState({
+      activeChat: null
     })
   }
 
@@ -103,9 +131,25 @@ export default class extends Component {
     })
   }
 
-  handleJoinChat = id => {
-    console.log('user requested to join chat with id', id)
+  handleSendMessage = text => {
+    this.socket.send({
+      type: 'message',
+      data: {
+        text,
+        chatId: this.state.activeChat
+      }
+    })
+  }
+
+  handleJoinChat = chatId => {
+    console.log('sending join request')
     this.handleModalClose()
+    this.socket.send({
+      type: 'join_chat',
+      data: {
+        chatId
+      }
+    })
   }
   
   render() {
@@ -136,6 +180,10 @@ export default class extends Component {
           <div className={`app-body ${hasActiveChat ? '' : 'unfocus'}`}>
             <ChatBody
               chat={this.state.chats[this.state.activeChat]}
+              onSubmit={this.handleSendMessage}
+              user={this.state.user}
+              disabled={!Boolean(this.state.activeChat)}
+              handleGoBack={this.handleGoBack}
             />
           </div>
         </div>

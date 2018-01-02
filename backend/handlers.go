@@ -23,11 +23,6 @@ type SetUserRequest struct {
 	Name   string `json:"name"`
 }
 
-type NewMessageRequest struct {
-	Text   string `json:"text"`
-	ChatID string `json:"chatId"`
-}
-
 type ChatSubscribeRequest struct {
 	ChatID string `json:"chatId"`
 }
@@ -43,12 +38,17 @@ type AuthenticationResponse struct {
 	Token string `json:"token"`
 }
 
+type MessageRequest struct {
+	ChatID string `json:"chatId"`
+	Text   string `json:"text"`
+}
+
 func registerHandlers(s *Server) {
 	s.Handle("new_chat", authTest(handleNewChat))
-	s.Handle("new_message", authTest(handleNewMessage))
 	s.Handle("set_user", authTest(handleSetUser))
-	s.Handle("subscribe_chat", authTest(handleSubscribeChat))
+	s.Handle("join_chat", authTest(handleJoinChat))
 	s.Handle("authenticate", handleAuthentication)
+	s.Handle("message", authTest(handleMessage))
 }
 
 func authTest(eh EventHandler) EventHandler {
@@ -56,10 +56,7 @@ func authTest(eh EventHandler) EventHandler {
 		if ss.User != nil {
 			eh(s, ss, e)
 		} else {
-			ss.Send <- &Event{
-				"failed_authentication",
-				nil,
-			}
+			ss.Send <- NewEvent("failed_authentication", nil)
 		}
 	}
 }
@@ -77,15 +74,12 @@ func handleNewChat(s *Server, ss *Session, e *Event) {
 	}
 	s.NewChat(nc)
 	ss.User.RegisterChat(nc)
-	ss.Send <- &Event{
-		"chat_status",
-		nc.GenerateStatus(s),
-	}
+	fmt.Println("Created chat", nc.UniqueIdentifier(), "by", ss.User.UniqueIdentifier())
+	ss.Send <- NewEvent("chat_status", nc.GenerateStatus(s))
 }
 
-func handleNewMessage(s *Server, ss *Session, e *Event) {
-	fmt.Println(e.Type, "event triggered")
-	var req NewMessageRequest
+func handleMessage(s *Server, ss *Session, e *Event) {
+	var req MessageRequest
 	if err := mapstructure.Decode(e.Data, &req); err != nil {
 		fmt.Println(err)
 		return
@@ -99,7 +93,7 @@ func handleNewMessage(s *Server, ss *Session, e *Event) {
 		fmt.Println("Message sent by user ", ss.User.ID, " to chat that it isn't subscribed to ", req.ChatID)
 	}
 	resp := NewMessage(ss.User.ID, req.ChatID, req.Text)
-	c.Broadcast <- NewEvent("new_message", resp)
+	c.Broadcast <- NewEvent("message", resp)
 }
 
 func handleSetUser(s *Server, ss *Session, e *Event) {
@@ -109,13 +103,10 @@ func handleSetUser(s *Server, ss *Session, e *Event) {
 		fmt.Println(err)
 		return
 	}
-	evt := &Event{
-		"set_user",
-		&SetUserRequest{
-			ss.User.ID,
-			req.Name,
-		},
-	}
+	evt := NewEvent("set_user", &SetUserRequest{
+		ss.User.ID,
+		req.Name,
+	})
 	fmt.Println("Changing name for", ss.User.UniqueIdentifier(), "to", req.Name)
 	ss.User.Name = req.Name
 	sentMap := make(map[string]bool)
@@ -133,7 +124,7 @@ func handleSetUser(s *Server, ss *Session, e *Event) {
 	}
 }
 
-func handleSubscribeChat(s *Server, ss *Session, e *Event) {
+func handleJoinChat(s *Server, ss *Session, e *Event) {
 	var req ChatSubscribeRequest
 	if err := mapstructure.Decode(e.Data, &req); err != nil {
 		fmt.Println(err)
@@ -141,6 +132,9 @@ func handleSubscribeChat(s *Server, ss *Session, e *Event) {
 	}
 	if c, f := s.Chats[req.ChatID]; f {
 		c.SubscribeUser(ss.User)
+		ss.User.RegisterChat(c)
+		fmt.Println("User", ss.User.UniqueIdentifier(), "joined chat", c.UniqueIdentifier())
+		c.Broadcast <- NewEvent("chat_status", c.GenerateStatus(s))
 	}
 }
 
@@ -164,10 +158,7 @@ func handleAuthentication(s *Server, ss *Session, e *Event) {
 			return
 		}
 		ss.User = u
-		ss.Send <- &Event{
-			"authenticate",
-			&AuthenticationResponse{u.ID, u.Name, t},
-		}
+		ss.Send <- NewEvent("authenticate", &AuthenticationResponse{u.ID, u.Name, t})
 		s.NewUser(u)
 	} else {
 		u, err = Authenticate(s, req.Token)
@@ -176,10 +167,7 @@ func handleAuthentication(s *Server, ss *Session, e *Event) {
 			return
 		}
 		ss.User = u
-		ss.Send <- &Event{
-			"authenticate",
-			&AuthenticationResponse{u.ID, u.Name, req.Token},
-		}
+		ss.Send <- NewEvent("authenticate", &AuthenticationResponse{u.ID, u.Name, req.Token})
 	}
 	fmt.Println("User", u.UniqueIdentifier(), "authenticated")
 	s.NewSession(ss)

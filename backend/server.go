@@ -70,10 +70,11 @@ func (s *Server) EndSession(ss *Session) {
 	fmt.Println("Terminating session for user", ss.User.UniqueIdentifier())
 }
 
-func (s *Server) NewChat(chat *Chat) {
+func (s *Server) NewChat(c *Chat) {
 	s.Lock()
-	s.Chats[chat.Name] = chat
+	s.Chats[c.ID] = c
 	s.Unlock()
+	go c.Write(s)
 }
 
 func (s *Server) NewUser(u *User) {

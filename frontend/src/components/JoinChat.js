@@ -91,12 +91,7 @@ export default class extends Component {
         </div>
         <span className="vertical-line" />
         <div className={`joinchat-section ${join ? 'joinchat-section-selected' : ''}`}>
-          <div
-            className="joinchat-section-title"
-            onClick={this.handleJoin}
-          >
-            Join Chat
-          </div>
+          <div className="joinchat-section-title">Join Chat</div>
           <input
             type="text"
             placeholder="Chat ID"
@@ -104,7 +99,12 @@ export default class extends Component {
             onChange={this.handleChangeChatId}
             value={chatId}
           />
-          <button className="joinchat-section-submit">Join</button>
+          <button
+            className="joinchat-section-submit"
+            onClick={this.handleJoin}
+          >
+            Join
+          </button>
         </div>
       </div>
     )

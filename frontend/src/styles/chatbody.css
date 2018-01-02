@@ -5,18 +5,29 @@
 }
 
 .chatbody-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
   height: 40px;
   background-color: rgb(233, 233, 233);
   height: 50px;
 }
 
+.chatbody-title {
+  font-weight: bold;
+  font-size: 16pt;
+}
 
 .chatbody-back {
-  display: none;
+  opacity: 0;
 }
 
 .chatbody-body {
   flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: left;
 }
 
 .chatbody-footer {
@@ -67,6 +78,6 @@
 
 @media screen and (max-width: 700px) {
   .chatbody-back {
-    display: block;
+    opacity: 1;
   }
 }

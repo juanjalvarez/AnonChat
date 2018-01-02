@@ -4,7 +4,8 @@ export default class {
     this.id = id
     this.name = name
     this.owner = owner
-    this.users = []
+    this.users = {}
     this.messages = []
+    this.notifications = 0
   }
 }

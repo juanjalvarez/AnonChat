@@ -12,10 +12,10 @@ type Chat struct {
 }
 
 type ChatStatus struct {
-	ID    string        `json:"id"`
-	Name  string        `json:"name"`
-	Owner string        `json:"owner"`
-	Users []*UserStatus `json:"users"`
+	ID    string                 `json:"id"`
+	Name  string                 `json:"name"`
+	Owner string                 `json:"owner"`
+	Users map[string]*UserStatus `json:"users"`
 }
 
 func NewChat(name string, owner *User) (*Chat, error) {
@@ -39,9 +39,9 @@ func NewChat(name string, owner *User) (*Chat, error) {
 
 func (c *Chat) Write(s *Server) {
 	for e := range c.Broadcast {
-		for id, _ := range c.Users {
+		for id := range c.Users {
 			if ss, f := s.Sessions[id]; f {
-				ss.Conn.WriteJSON(e)
+				ss.Send <- e
 			}
 		}
 	}
@@ -54,9 +54,13 @@ func (c *Chat) SubscribeUser(u *User) {
 }
 
 func (c *Chat) GenerateStatus(s *Server) *ChatStatus {
-	users := []*UserStatus{}
+	users := make(map[string]*UserStatus)
 	for _, u := range c.Users {
-		users = append(users, u.GenerateStatus(s))
+		users[u.ID] = u.GenerateStatus(s)
 	}
 	return &ChatStatus{c.ID, c.Name, c.Owner.ID, users}
+}
+
+func (c *Chat) UniqueIdentifier() string {
+	return c.ID + "@" + c.Name
 }

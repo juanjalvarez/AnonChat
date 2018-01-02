@@ -34,14 +34,14 @@ export default class extends Component {
               Object.keys(chats).map(c => {
                 const chat = chats[c]
                 const lastMessage = chat.messages.length === 0 ? null : chat.messages[chat.messages.length - 1]
-                const lastUser = ''
+                const lastUser = chat.messages.length === 0 ? null : chat.users[lastMessage.userId].name
                 // TODO: Change to new data model
                 return (
                   <ChatItem
                     key={chat.id}
                     id={chat.id}
                     name={chat.name}
-                    members={chat.users.length}
+                    members={Object.keys(chat.users).length}
                     notifications={chat.notifications}
                     lastMessage={lastMessage ? lastMessage.text : ''}
                     lastUser={lastUser}
