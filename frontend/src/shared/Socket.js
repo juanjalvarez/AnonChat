@@ -4,7 +4,6 @@ export default class {
     this.ws = new WebSocket(url)
     this.pending = [
       () => {
-        console.log(`Connected to ${url}`)
         this.ws.onmessage = this.handleMessage
       }
     ]
@@ -18,7 +17,6 @@ export default class {
 
   handleMessage = e => {
     const event = JSON.parse(e.data)
-    console.log(event)
     if (!Boolean(event)) {
       return
     }
@@ -40,8 +38,6 @@ export default class {
   }
 
   send = event => {
-    console.log('sending', event)
-    console.log('sending', JSON.stringify(event))
     const f = () => this.ws.send(JSON.stringify(event))
     if (this.open) {
       f()

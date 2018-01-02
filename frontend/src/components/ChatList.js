@@ -2,6 +2,8 @@ import React, { Component } from 'react'
 
 import ChatItem from './ChatItem'
 
+import '../styles/chatlist.css'
+
 export default class extends Component {
 
   handleSelectChat = id => {
@@ -12,18 +14,32 @@ export default class extends Component {
   }
 
   render() {
-    const { chats } = this.props
+    const { users, chats } = this.props
     if (Boolean(chats)) {
       return (
-        <div>
-          {
-            Object.keys(chats).map(c => {
-              const chat = chats[c]
-              return (
-                <ChatItem key={chat.id} chat={chat} onSelect={this.handleSelectChat} />
-              )
-            })
-          }
+        <div className="chatlist-container">
+          <div className="chatlist-wrapper">
+            {
+              Object.keys(chats).map(c => {
+                const chat = chats[c]
+                const lastMessage = chat.messages[chat.messages.length - 1]
+                const lastUser = users[lastMessage.userId].name
+                return (
+                  <ChatItem
+                    key={chat.id}
+                    id={chat.id}
+                    name={chat.name}
+                    members={chat.users.length}
+                    notifications={chat.notifications}
+                    lastMessage={lastMessage.text}
+                    lastUser={lastUser}
+                    onSelect={this.handleSelectChat}
+                  />
+                )
+              })
+            }
+          </div>
+          <div className="chatlist-add">+</div>
         </div>
       )
     }

@@ -1,7 +1,7 @@
 .chatitem-container {
   display: flex;
   flex-direction: column;
-  background-color: rgb(241, 241, 241);
+  background-color: rgb(219, 219, 219);
   margin-top: 5px;
   margin-bottom: 5px;
   padding: 10px;
@@ -27,6 +27,10 @@
   color: white;
 }
 
+.chatitem-notifications > * {
+  white-space: nowrap;
+}
+
 .chatitem-notifications > span {
   padding: 5px;
 }
@@ -34,4 +38,10 @@
 .chatitem-lastmessage {
   font-size: 8pt;
   color: rgb(170, 170, 170);
+}
+
+.nowrap {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

@@ -38,10 +38,10 @@ type AuthenticationResponse struct {
 }
 
 func registerHandlers(s *Server) {
-	s.Handle("new_chat", handleNewChat)
-	s.Handle("new_message", handleNewMessage)
+	s.Handle("new_chat", authTest(handleNewChat))
+	s.Handle("new_message", authTest(handleNewMessage))
 	s.Handle("set_user", authTest(handleSetUser))
-	s.Handle("subscribe_chat", handleSubscribeChat)
+	s.Handle("subscribe_chat", authTest(handleSubscribeChat))
 	s.Handle("authenticate", handleAuthentication)
 }
 

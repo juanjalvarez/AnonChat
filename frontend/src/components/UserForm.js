@@ -10,10 +10,6 @@ export default class extends Component {
     text: 'Anonymous'
   }
 
-  constructor() {
-    super()
-  }
-
   componentWillReceiveProps(props) {
     const { name = 'Anonymous' } = props.user
     this.setState({

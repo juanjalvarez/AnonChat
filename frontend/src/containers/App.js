@@ -15,7 +15,7 @@ export default class extends Component {
     chats: {
       a: {
         id: 'abc123',
-        name: 'AnonChat Evangelists',
+        name: 'AnonChat Evangelists akwjdhlakwdhaklwjdhkljawd',
         users: ["1"],
         messages: [
           {
@@ -96,11 +96,11 @@ export default class extends Component {
           />
           <ChatList
             chats={this.state.chats}
+            users={this.state.cachedUsers}
             onSelectChat={this.handleChatChange}
           />
         </div>
         <div className={`app-body ${hasActiveChat ? '' : 'unfocus'}`}>
-          body
           <button onClick={() => this.setState({activeChat: null})}>back</button>
         </div>
       </div>

@@ -1,0 +1,32 @@
+.chatlist-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
+
+.chatlist-add {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  font-size: 24pt;
+  color: white;
+  background-color: rgb(96, 96, 184);
+  text-shadow: 2px 2px 2px black;
+  cursor: pointer;
+  user-select: none;
+  margin: 5px;
+  border-radius: 5px;
+  box-shadow: 2px 2px 3px rgb(61, 61, 61);
+}
+
+.chatlist-add:hover {
+  background-color: rgb(129, 129, 224);
+  transition-duration: 0.1s;
+}
+
+.chatlist-add:active {
+  text-shadow: 1px 1px 1px black;
+}
