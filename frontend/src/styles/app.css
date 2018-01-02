@@ -2,6 +2,7 @@
   display: flex;
   flex-direction: row;
   height: 100vh;
+  transition-duration: 0.5s;
 }
 
 .app-nav {
@@ -41,5 +42,6 @@
 }
 
 .blur {
-  filter: blur(3px);
+  filter: blur(4px);
+  transition-duration: 0.5s;
 }

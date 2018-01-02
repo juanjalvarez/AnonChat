@@ -1,8 +1,105 @@
 .joinchat-container {
   display: flex;
   flex-direction: row;
+  width: 100%;
+  height: 100%;
 }
 
-.joinchat-container > * {
+.joinchat-section {
+  display: flex;
+  flex-direction: column;
   flex-basis: 50%;
+  margin: 5px;
+  padding: 5px;
+  padding-top: 20%;
+}
+
+.joinchat-section-title {
+  text-align: center;
+  font-size: 24pt;
+}
+
+.joinchat-section-input {
+  margin-top: 20px;
+  margin-bottom: 20px;
+  text-align: center;
+  width: 100%;
+  max-width: 250px;
+  align-self: center;
+  height: 36px;
+  font-size: 14pt;
+  border: 0px;
+  box-shadow: 2px 2px 5px black;
+}
+
+.joinchat-section-submit {
+  width: 100%;
+  max-width: 250px;
+  align-self: center;
+  height: 48px;
+  background-color: rgb(101, 101, 172);
+  color: white;
+  font-size: 16pt;
+  border: none;
+  box-shadow: 2px 2px 5px black;
+  cursor: pointer;
+}
+
+.vertical-line {
+  content: "";
+  margin-top: 2%;
+  margin-bottom: 2%;
+  border-right: 1px solid rgb(210, 210, 210);
+}
+
+.joinchat-section-select {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.joinchat-section-selector {
+  padding: 40px;
+  width: 100%;
+  font-size: 24pt;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: 5px 5px 5px black;
+}
+
+.joinchat-section-selectcreate {
+  background: linear-gradient(to bottom right, rgb(187, 255, 179), rgb(77, 121, 76));
+}
+
+.joinchat-section-selectjoin{
+  background: linear-gradient(to bottom right, rgb(129, 198, 211), rgb(78, 101, 163));
+}
+
+.joinchat-section-selector:first-child {
+  margin-bottom: 10px;
+}
+
+@media screen and (max-width: 700px) {
+  .joinchat-container {
+    flex-direction: column;
+  }
+
+  .joinchat-section-select {
+    display: flex;
+  }
+
+  .joinchat-section {
+    display: none;
+    flex-basis: 100%;
+  }
+
+  .joinchat-section-selected {
+    display: flex;
+  }
+
+  .joinchat-container > .vertical-line {
+    display: none;
+  }
 }

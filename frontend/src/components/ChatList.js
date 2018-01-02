@@ -15,9 +15,12 @@ export default class extends Component {
   }
 
   showModal = () => {
-    const { showModal } = this.props
+    const { showModal, createChat, joinChat } = this.props
     if (showModal) {
-      showModal(<JoinChat />)
+      showModal(<JoinChat
+        joinChat={joinChat}
+        createChat={createChat}
+      />)
     }
   }
 

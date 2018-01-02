@@ -98,6 +98,16 @@ export default class extends Component {
       modal: null
     })
   }
+
+  handleCreateChat = name => {
+    console.log('user requested new chat with name', name)
+    this.handleModalClose()
+  }
+
+  handleJoinChat = id => {
+    console.log('user requested to join chat with id', id)
+    this.handleModalClose()
+  }
   
   render() {
     const hasActiveChat = Boolean(this.state.activeChat)
@@ -121,6 +131,8 @@ export default class extends Component {
               users={this.state.cachedUsers}
               onSelectChat={this.handleChatChange}
               showModal={this.showModal}
+              createChat={this.handleCreateChat}
+              joinChat={this.handleJoinChat}
             />
           </div>
           <div className={`app-body ${hasActiveChat ? '' : 'unfocus'}`}>
