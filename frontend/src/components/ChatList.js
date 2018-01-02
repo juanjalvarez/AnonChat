@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 
 import ChatItem from './ChatItem'
+import JoinChat from './JoinChat'
 
 import '../styles/chatlist.css'
 
@@ -10,6 +11,13 @@ export default class extends Component {
     const { onSelectChat } = this.props
     if (onSelectChat) {
       onSelectChat(id)
+    }
+  }
+
+  showModal = () => {
+    const { showModal } = this.props
+    if (showModal) {
+      showModal(<JoinChat />)
     }
   }
 
@@ -39,7 +47,7 @@ export default class extends Component {
               })
             }
           </div>
-          <div className="chatlist-add">+</div>
+          <div className="chatlist-add" onClick={this.showModal}>+</div>
         </div>
       )
     }

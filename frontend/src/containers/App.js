@@ -4,12 +4,14 @@ import Socket from '../shared/Socket'
 
 import UserForm from '../components/UserForm'
 import ChatList from '../components/ChatList'
+import Modal from '../components/Modal'
 
 import '../styles/app.css'
 
 export default class extends Component {
 
   state = {
+    modal: null,
     user: null,
     activeChat: null,
     chats: {
@@ -84,24 +86,46 @@ export default class extends Component {
       activeChat: id
     })
   }
+
+  showModal = modal => {
+    this.setState({
+      modal
+    })
+  }
+
+  handleModalClose = () => {
+    this.setState({
+      modal: null
+    })
+  }
   
   render() {
     const hasActiveChat = Boolean(this.state.activeChat)
     return (
-      <div className="app-container">
-        <div className={`app-nav ${hasActiveChat ? 'unfocus' : ''}`}>
-          <UserForm
-            onSubmit={this.handleUserChange}
-            user={this.state.user}
-          />
-          <ChatList
-            chats={this.state.chats}
-            users={this.state.cachedUsers}
-            onSelectChat={this.handleChatChange}
-          />
-        </div>
-        <div className={`app-body ${hasActiveChat ? '' : 'unfocus'}`}>
-          <button onClick={() => this.setState({activeChat: null})}>back</button>
+      <div>
+        {
+          this.state.modal ?
+          <Modal onClose={this.handleModalClose}>
+            {this.state.modal}
+          </Modal>
+          : null
+        }
+        <div className={`app-container ${Boolean(this.state.modal) ? 'blur' : ''}`}>
+          <div className={`app-nav ${hasActiveChat ? 'unfocus' : ''}`}>
+            <UserForm
+              onSubmit={this.handleUserChange}
+              user={this.state.user}
+            />
+            <ChatList
+              chats={this.state.chats}
+              users={this.state.cachedUsers}
+              onSelectChat={this.handleChatChange}
+              showModal={this.showModal}
+            />
+          </div>
+          <div className={`app-body ${hasActiveChat ? '' : 'unfocus'}`}>
+            <button onClick={() => this.setState({activeChat: null})}>back</button>
+          </div>
         </div>
       </div>
     )

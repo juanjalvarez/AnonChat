@@ -43,7 +43,14 @@ export default class extends Component {
   render() {
     return (
       <div className="userform-container">
-        <input value={this.state.text} className="userform-input" onChange={this.onChange} onKeyPress={this.onKey} onBlur={this.onBlur} />
+        <input
+          type="text"
+          value={this.state.text}
+          className="userform-input"
+          onChange={this.onChange}
+          onKeyPress={this.onKey}
+          onBlur={this.onBlur}
+        />
         <div className="userform-edit-wrapper">
           <Icon name="pencil-square-o" className="userform-edit" />
         </div>

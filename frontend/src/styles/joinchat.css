@@ -1,0 +1,8 @@
+.joinchat-container {
+  display: flex;
+  flex-direction: row;
+}
+
+.joinchat-container > * {
+  flex-basis: 50%;
+}
