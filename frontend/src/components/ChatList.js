@@ -25,7 +25,7 @@ export default class extends Component {
   }
 
   render() {
-    const { users, chats } = this.props
+    const { chats } = this.props
     if (Boolean(chats)) {
       return (
         <div className="chatlist-container">
@@ -33,8 +33,9 @@ export default class extends Component {
             {
               Object.keys(chats).map(c => {
                 const chat = chats[c]
-                const lastMessage = chat.messages[chat.messages.length - 1]
-                const lastUser = users[lastMessage.userId].name
+                const lastMessage = chat.messages.length === 0 ? null : chat.messages[chat.messages.length - 1]
+                const lastUser = ''
+                // TODO: Change to new data model
                 return (
                   <ChatItem
                     key={chat.id}
@@ -42,7 +43,7 @@ export default class extends Component {
                     name={chat.name}
                     members={chat.users.length}
                     notifications={chat.notifications}
-                    lastMessage={lastMessage.text}
+                    lastMessage={lastMessage ? lastMessage.text : ''}
                     lastUser={lastUser}
                     onSelect={this.handleSelectChat}
                   />

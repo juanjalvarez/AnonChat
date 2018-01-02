@@ -10,13 +10,14 @@
   flex-direction: column;
   flex-basis: 25%;
   max-width: 25%;
-  border-right: 1px solid black;
+  border-right: 1px solid rgb(210, 210, 210);
 }
 
 .app-body {
+  display: flex;
   flex-basis: 75%;
   max-width: 75%;
-  background: linear-gradient(to bottom right, rgb(52, 89, 212), rgb(50, 199, 245))
+  background: linear-gradient(to bottom right, rgb(52, 89, 212), rgb(125, 50, 245))
 }
 
 @media screen and (max-width: 950px) {

@@ -1,0 +1,31 @@
+.chatbody-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.chatbody-header {
+  height: 40px;
+  background-color: rgb(233, 233, 233);
+  height: 50px;
+}
+
+
+.chatbody-back {
+  display: none;
+}
+
+.chatbody-body {
+  flex-grow: 1;
+}
+
+.chatbody-footer {
+  background-color: rgb(233, 233, 233);
+  height: 50px;
+}
+
+@media screen and (max-width: 700px) {
+  .chatbody-back {
+    display: block;
+  }
+}

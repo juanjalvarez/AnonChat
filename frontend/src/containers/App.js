@@ -1,10 +1,12 @@
 import React, { Component } from 'react'
 
 import Socket from '../shared/Socket'
+import Chat from '../shared/Chat'
 
 import UserForm from '../components/UserForm'
 import ChatList from '../components/ChatList'
 import Modal from '../components/Modal'
+import ChatBody from '../components/ChatBody'
 
 import '../styles/app.css'
 
@@ -15,24 +17,6 @@ export default class extends Component {
     user: null,
     activeChat: null,
     chats: {
-      a: {
-        id: 'abc123',
-        name: 'AnonChat Evangelists akwjdhlakwdhaklwjdhkljawd',
-        users: ["1"],
-        messages: [
-          {
-            userId: '1',
-            text: 'me too!'
-          }
-        ],
-        notifications: 4
-      }
-    },
-    cachedUsers: {
-      "1": {
-        id: '1',
-        name: 'Jane Doe'
-      }
     }
   }
 
@@ -70,6 +54,16 @@ export default class extends Component {
         })
       }
     })
+    ws.on('chat_status', data => {
+      const chats = this.state.chats
+      const messages = chats[data.id] ? chats[data.id] : []
+      const nc = new Chat(data.id, data.name, data.owner)
+      nc.users = data.users
+      chats[data.id] = nc
+      this.setState({
+        chats
+      })
+    })
   }
 
   handleUserChange = name => {
@@ -100,8 +94,13 @@ export default class extends Component {
   }
 
   handleCreateChat = name => {
-    console.log('user requested new chat with name', name)
     this.handleModalClose()
+    this.socket.send({
+      type: 'new_chat',
+      data: {
+        name
+      }
+    })
   }
 
   handleJoinChat = id => {
@@ -128,7 +127,6 @@ export default class extends Component {
             />
             <ChatList
               chats={this.state.chats}
-              users={this.state.cachedUsers}
               onSelectChat={this.handleChatChange}
               showModal={this.showModal}
               createChat={this.handleCreateChat}
@@ -136,7 +134,9 @@ export default class extends Component {
             />
           </div>
           <div className={`app-body ${hasActiveChat ? '' : 'unfocus'}`}>
-            <button onClick={() => this.setState({activeChat: null})}>back</button>
+            <ChatBody
+              chat={this.state.chats[this.state.activeChat]}
+            />
           </div>
         </div>
       </div>

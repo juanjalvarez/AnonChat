@@ -5,6 +5,8 @@
   margin-top: 5px;
   margin-bottom: 5px;
   padding: 10px;
+  height: 50px;
+  cursor: pointer;
 }
 
 .chatitem-header {
