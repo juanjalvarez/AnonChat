@@ -31,6 +31,11 @@
   }
 }
 
+.blur {
+  filter: blur(4px);
+  transition-duration: 0.5s;
+}
+
 @media screen and (max-width: 700px) {
   .app-nav, .app-body {
     flex-basis: 100%;
@@ -40,9 +45,4 @@
   .app-container > .unfocus {
     display: none;
   }
-}
-
-.blur {
-  filter: blur(4px);
-  transition-duration: 0.5s;
 }

@@ -20,8 +20,49 @@
 }
 
 .chatbody-footer {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
   background-color: rgb(233, 233, 233);
   height: 50px;
+}
+
+.chatbody-input {
+  border-radius: 100px;
+  border: 0px;
+  box-shadow: 2px 2px 4px rgb(95, 95, 95);
+  height: 30px;
+  flex-grow: 1;
+  text-overflow: ellipsis;
+  font-size: 10pt;
+  padding-left: 15px;
+  padding-right: 15px;
+  margin-right: 10px;
+  margin-left: 10px;
+}
+
+.chatbody-send {
+  text-align: center;
+  width: 25px;
+  height: 25px;
+  line-height: 25px;
+  font-size: 20pt;
+  margin-right: 10px;
+  background-color: rgb(114, 188, 218);
+  padding: 5px;
+  border-radius: 100px;
+  color: white;
+  box-shadow: 2px 2px 4px rgb(95, 95, 95);
+  cursor: pointer;
+}
+
+.chatbody-send:hover {
+  background-color: rgb(146, 213, 240);
+}
+
+.chatbody-send:active {
+  box-shadow: 1px 1px 2px rgb(95, 95, 95);
 }
 
 @media screen and (max-width: 700px) {
