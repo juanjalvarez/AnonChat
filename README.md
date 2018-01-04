@@ -52,11 +52,12 @@ cd frontend && npm start
 cd backend && ./run.sh
 ```
 
-## Built With
+## Contributing
 
-* [Dropwizard](http://www.dropwizard.io/1.0.2/docs/) - The web framework used
-* [Maven](https://maven.apache.org/) - Dependency Management
-* [ROME](https://rometools.github.io/rome/) - Used to generate RSS Feeds
+Make sure to write code according to the following guidelines.
+
+1. [Frontend](https://standardjs.com/rules.html)
+2. [Backend](https://github.com/golang/go/wiki/CodeReviewComments)
 
 ## License
 
