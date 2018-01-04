@@ -63,11 +63,17 @@ func (s *Server) NewSession(ss *Session) {
 }
 
 func (s *Server) EndSession(ss *Session) {
-	s.Lock()
-	delete(s.Sessions, ss.User.ID)
-	s.Unlock()
+	if ss.User != nil {
+		s.Lock()
+		delete(s.Sessions, ss.User.ID)
+		s.Unlock()
+	}
 	ss.Conn.Close()
-	fmt.Println("Terminating session for user", ss.User.UniqueIdentifier())
+	if ss.User != nil {
+		fmt.Println("Terminating session for user", ss.User.UniqueIdentifier())
+	} else {
+		fmt.Println("Terminating rogue sesssion")
+	}
 }
 
 func (s *Server) NewChat(c *Chat) {

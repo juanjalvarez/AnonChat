@@ -145,6 +145,7 @@ func handleAuthentication(s *Server, ss *Session, e *Event) {
 		return
 	}
 	var u *User
+	var t string
 	var err error
 	if req.NewUser {
 		u, err = NewUser()
@@ -152,13 +153,12 @@ func handleAuthentication(s *Server, ss *Session, e *Event) {
 			fmt.Println(err)
 			return
 		}
-		t, err := GenerateToken(s, u)
+		t, err = GenerateToken(s, u)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
 		ss.User = u
-		ss.Send <- NewEvent("authenticate", &AuthenticationResponse{u.ID, u.Name, t})
 		s.NewUser(u)
 	} else {
 		u, err = Authenticate(s, req.Token)
@@ -166,9 +166,10 @@ func handleAuthentication(s *Server, ss *Session, e *Event) {
 			fmt.Println(err)
 			return
 		}
+		t = req.Token
 		ss.User = u
-		ss.Send <- NewEvent("authenticate", &AuthenticationResponse{u.ID, u.Name, req.Token})
 	}
+	ss.Send <- NewEvent("authenticate", &AuthenticationResponse{u.ID, u.Name, t})
 	fmt.Println("User", u.UniqueIdentifier(), "authenticated")
 	s.NewSession(ss)
 	u.SendChats(s)
