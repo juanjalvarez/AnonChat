@@ -8,6 +8,8 @@ import ChatList from '../components/ChatList'
 import Modal from '../components/Modal'
 import ChatBody from '../components/ChatBody'
 
+import env from '../env.json'
+
 import '../styles/app.css'
 
 export default class extends Component {
@@ -22,8 +24,8 @@ export default class extends Component {
 
   constructor() {
     super()
-    const token = localStorage.getItem('anonChatToken')
-    const ws = this.socket = new Socket('ws://localhost:4000')
+    const token = null//localStorage.getItem('anonChatToken')
+    const ws = this.socket = new Socket(`ws://${env.backend}`)
     let payload = {
       newUser: true
     }
@@ -155,7 +157,7 @@ export default class extends Component {
   render() {
     const hasActiveChat = Boolean(this.state.activeChat)
     return (
-      <div>
+      <div className="app-container">
         {
           this.state.modal ?
           <Modal onClose={this.handleModalClose}>

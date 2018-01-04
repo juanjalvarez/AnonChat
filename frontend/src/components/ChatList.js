@@ -26,9 +26,10 @@ export default class extends Component {
 
   render() {
     const { chats } = this.props
-    if (Boolean(chats)) {
-      return (
-        <div className="chatlist-container">
+    return (
+      <div className="chatlist-container">
+        {
+          Boolean(chats) && Object.keys(chats).length > 0 ?
           <div className="chatlist-wrapper">
             {
               Object.keys(chats).map(c => {
@@ -51,9 +52,13 @@ export default class extends Component {
               })
             }
           </div>
-          <div className="chatlist-add" onClick={this.showModal}>+</div>
-        </div>
-      )
-    }
+          :
+          <div className="chatlist-nochat">
+            <span>You are not a member of any chat(s), please create/join one below.</span>
+          </div>
+        }
+        <div className="chatlist-add" onClick={this.showModal}>+</div>
+      </div>
+    )
   }
 }

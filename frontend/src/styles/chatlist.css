@@ -30,3 +30,13 @@
 .chatlist-add:active {
   text-shadow: 1px 1px 1px black;
 }
+
+.chatlist-nochat {
+  display: flex;
+  flex-basis: 100%;
+  justify-content: center;
+  align-items: center;
+  color: grey;
+  padding: 15px;
+  font-size: 16px;
+}

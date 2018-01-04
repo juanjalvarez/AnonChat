@@ -11,3 +11,4 @@ build
 *.lock
 vendor
 .vscode
+env.json
