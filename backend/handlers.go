@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/mitchellh/mapstructure"
 )
 
@@ -64,33 +62,33 @@ func authTest(eh EventHandler) EventHandler {
 func handleNewChat(s *Server, ss *Session, e *Event) {
 	var req NewChatRequest
 	if err := mapstructure.Decode(e.Data, &req); err != nil {
-		fmt.Println(err)
+		s.log.err.Println(err)
 		return
 	}
 	nc, err := NewChat(req.Name, ss.User)
 	if err != nil {
-		fmt.Println(err)
+		s.log.err.Println(err)
 		return
 	}
 	s.NewChat(nc)
 	ss.User.RegisterChat(nc)
-	fmt.Println("Created chat", nc.UniqueIdentifier(), "by", ss.User.UniqueIdentifier())
+	s.log.info.Println("Created chat", nc.UniqueIdentifier(), "by", ss.User.UniqueIdentifier())
 	ss.Send <- NewEvent("chat_status", nc.GenerateStatus(s))
 }
 
 func handleMessage(s *Server, ss *Session, e *Event) {
 	var req MessageRequest
 	if err := mapstructure.Decode(e.Data, &req); err != nil {
-		fmt.Println(err)
+		s.log.err.Println(err)
 		return
 	}
 	c, f := s.Chats[req.ChatID]
 	if !f {
-		fmt.Println("Message sent by user ", ss.User.ID, " to chat that doesn't exist ", req.ChatID)
+		s.log.warn.Println("Message sent by user ", ss.User.ID, " to chat that doesn't exist ", req.ChatID)
 		return
 	}
 	if _, f = c.Users[ss.User.ID]; !f {
-		fmt.Println("Message sent by user ", ss.User.ID, " to chat that it isn't subscribed to ", req.ChatID)
+		s.log.warn.Println("Message sent by user ", ss.User.ID, " to chat that it isn't subscribed to ", req.ChatID)
 	}
 	resp := NewMessage(ss.User.ID, req.ChatID, req.Text)
 	c.Broadcast <- NewEvent("message", resp)
@@ -100,14 +98,14 @@ func handleSetUser(s *Server, ss *Session, e *Event) {
 	var req SetUserRequest
 	err := mapstructure.Decode(e.Data, &req)
 	if err != nil {
-		fmt.Println(err)
+		s.log.err.Println(err)
 		return
 	}
 	evt := NewEvent("set_user", &SetUserRequest{
 		ss.User.ID,
 		req.Name,
 	})
-	fmt.Println("Changing name for", ss.User.UniqueIdentifier(), "to", req.Name)
+	s.log.info.Println("Changing name for", ss.User.UniqueIdentifier(), "to", req.Name)
 	ss.User.Name = req.Name
 	sentMap := make(map[string]bool)
 	sentMap[ss.User.ID] = true
@@ -127,13 +125,13 @@ func handleSetUser(s *Server, ss *Session, e *Event) {
 func handleJoinChat(s *Server, ss *Session, e *Event) {
 	var req ChatSubscribeRequest
 	if err := mapstructure.Decode(e.Data, &req); err != nil {
-		fmt.Println(err)
+		s.log.err.Println(err)
 		return
 	}
 	if c, f := s.Chats[req.ChatID]; f {
 		c.SubscribeUser(ss.User)
 		ss.User.RegisterChat(c)
-		fmt.Println("User", ss.User.UniqueIdentifier(), "joined chat", c.UniqueIdentifier())
+		s.log.info.Println("User", ss.User.UniqueIdentifier(), "joined chat", c.UniqueIdentifier())
 		c.Broadcast <- NewEvent("chat_status", c.GenerateStatus(s))
 	}
 }
@@ -141,7 +139,7 @@ func handleJoinChat(s *Server, ss *Session, e *Event) {
 func handleAuthentication(s *Server, ss *Session, e *Event) {
 	var req AuthenticationRequest
 	if err := mapstructure.Decode(e.Data, &req); err != nil {
-		fmt.Println(err)
+		s.log.err.Println(err)
 		return
 	}
 	var u *User
@@ -150,12 +148,12 @@ func handleAuthentication(s *Server, ss *Session, e *Event) {
 	if req.NewUser {
 		u, err = NewUser()
 		if err != nil {
-			fmt.Println(err)
+			s.log.err.Println(err)
 			return
 		}
 		t, err = GenerateToken(s, u)
 		if err != nil {
-			fmt.Println(err)
+			s.log.err.Println(err)
 			return
 		}
 		ss.User = u
@@ -163,14 +161,18 @@ func handleAuthentication(s *Server, ss *Session, e *Event) {
 	} else {
 		u, err = Authenticate(s, req.Token)
 		if err != nil {
-			fmt.Println(err)
+			s.log.err.Println(err)
+			return
+		}
+		if u == nil {
+			s.log.warn.Println("Failed to authenticate")
 			return
 		}
 		t = req.Token
 		ss.User = u
 	}
 	ss.Send <- NewEvent("authenticate", &AuthenticationResponse{u.ID, u.Name, t})
-	fmt.Println("User", u.UniqueIdentifier(), "authenticated")
+	s.log.info.Println("User", u.UniqueIdentifier(), "authenticated")
 	s.NewSession(ss)
 	u.SendChats(s)
 }

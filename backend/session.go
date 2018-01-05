@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/gorilla/websocket"
 )
 
@@ -26,7 +24,6 @@ func (ss *Session) Read(s *Server) {
 	var err error
 	for {
 		if err != nil {
-			fmt.Println(err)
 			break
 		}
 		if err = ss.Conn.ReadJSON(&e); err != nil {

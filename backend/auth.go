@@ -1,8 +1,6 @@
 package main
 
 import (
-	"errors"
-
 	"github.com/dgrijalva/jwt-go"
 	"github.com/mitchellh/mapstructure"
 )
@@ -36,7 +34,7 @@ func Authenticate(s *Server, t string) (*User, error) {
 	}
 	u, f := s.Users[c.ID]
 	if !f {
-		return nil, errors.New("User with ID " + c.ID + " does not exist")
+		return nil, nil
 	}
 	return u, nil
 }

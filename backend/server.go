@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"path/filepath"
 	"sync"
@@ -16,9 +15,10 @@ type Server struct {
 	Users      map[string]*User
 	Sessions   map[string]*Session
 	Chats      map[string]*Chat
+	log        *Logger
 }
 
-func NewServer() (*Server, error) {
+func NewServer(l *Logger) (*Server, error) {
 	abs, err := filepath.Abs("./private.key")
 	if err != nil {
 		return nil, err
@@ -34,9 +34,9 @@ func NewServer() (*Server, error) {
 		make(map[string]*User),
 		make(map[string]*Session),
 		make(map[string]*Chat),
+		l,
 	}
 	registerHandlers(s)
-	fmt.Println("Constructing new server...")
 	return s, nil
 }
 
@@ -44,14 +44,14 @@ func (s *Server) Handle(event string, eh EventHandler) {
 	s.Lock()
 	s.Handlers[event] = eh
 	s.Unlock()
-	fmt.Println("Registered handler for '", event, "'")
+	s.log.info.Println("Registered handler for '", event, "'")
 }
 
 func (s *Server) HandleEvent(ss *Session, e *Event) {
 	if h, f := s.Handlers[e.Type]; f {
 		h(s, ss, e)
 	} else {
-		fmt.Println("Failed to find event handler for", e.Type)
+		s.log.warn.Println("Failed to find event handler for", e.Type)
 	}
 }
 
@@ -59,7 +59,7 @@ func (s *Server) NewSession(ss *Session) {
 	s.Lock()
 	s.Sessions[ss.User.ID] = ss
 	s.Unlock()
-	fmt.Println("New session for user", ss.User.UniqueIdentifier())
+	s.log.info.Println("New session for user", ss.User.UniqueIdentifier())
 }
 
 func (s *Server) EndSession(ss *Session) {
@@ -70,9 +70,9 @@ func (s *Server) EndSession(ss *Session) {
 	}
 	ss.Conn.Close()
 	if ss.User != nil {
-		fmt.Println("Terminating session for user", ss.User.UniqueIdentifier())
+		s.log.info.Println("Terminating session for user", ss.User.UniqueIdentifier())
 	} else {
-		fmt.Println("Terminating rogue sesssion")
+		s.log.warn.Println("Terminating rogue sesssion")
 	}
 }
 
@@ -97,11 +97,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return true
 		},
 	}
-	val := r.Header.Get("Authentication")
-	fmt.Println(val)
 	socket, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		fmt.Println(err)
+		s.log.err.Println(err)
 		return
 	}
 	ss := NewSession(socket)
