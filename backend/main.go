@@ -1,23 +1,31 @@
 package main
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
 
-	r "github.com/dancannon/gorethink"
 	"github.com/gorilla/mux"
 )
 
+type Config struct {
+	DB string `json:"db"`
+}
+
 func main() {
 	l := NewLogger()
-	_, err := r.Connect(r.ConnectOpts{
-		Address:  "localhost:28015",
-		Database: "rtsupport",
-	})
+	var cfg Config
+	d, err := ioutil.ReadFile("./config.json")
 	if err != nil {
 		l.err.Println(err)
 		return
 	}
-	srv, err := NewServer(l)
+	err = json.Unmarshal(d, &cfg)
+	if err != nil {
+		l.err.Println(err)
+		return
+	}
+	srv, err := NewServer(&cfg, l)
 	if err != nil {
 		l.err.Println(err)
 		return

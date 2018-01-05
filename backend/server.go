@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"sync"
 
+	r "github.com/dancannon/gorethink"
 	"github.com/gorilla/websocket"
 )
 
@@ -15,10 +16,19 @@ type Server struct {
 	Users      map[string]*User
 	Sessions   map[string]*Session
 	Chats      map[string]*Chat
-	log        *Logger
+	Log        *Logger
+	DB         *r.Session
 }
 
-func NewServer(l *Logger) (*Server, error) {
+func NewServer(cfg *Config, l *Logger) (*Server, error) {
+	db, err := r.Connect(r.ConnectOpts{
+		Address:  "localhost:28015",
+		Database: "anonchat",
+	})
+	if err != nil {
+		return nil, err
+	}
+	l.info.Println("Connected to database")
 	abs, err := filepath.Abs("./private.key")
 	if err != nil {
 		return nil, err
@@ -35,6 +45,7 @@ func NewServer(l *Logger) (*Server, error) {
 		make(map[string]*Session),
 		make(map[string]*Chat),
 		l,
+		db,
 	}
 	registerHandlers(s)
 	return s, nil
@@ -44,14 +55,14 @@ func (s *Server) Handle(event string, eh EventHandler) {
 	s.Lock()
 	s.Handlers[event] = eh
 	s.Unlock()
-	s.log.info.Println("Registered handler for '", event, "'")
+	s.Log.info.Println("Registered handler for '", event, "'")
 }
 
 func (s *Server) HandleEvent(ss *Session, e *Event) {
 	if h, f := s.Handlers[e.Type]; f {
 		h(s, ss, e)
 	} else {
-		s.log.warn.Println("Failed to find event handler for", e.Type)
+		s.Log.warn.Println("Failed to find event handler for", e.Type)
 	}
 }
 
@@ -59,7 +70,7 @@ func (s *Server) NewSession(ss *Session) {
 	s.Lock()
 	s.Sessions[ss.User.ID] = ss
 	s.Unlock()
-	s.log.info.Println("New session for user", ss.User.UniqueIdentifier())
+	s.Log.info.Println("New session for user", ss.User.UniqueIdentifier())
 }
 
 func (s *Server) EndSession(ss *Session) {
@@ -70,9 +81,9 @@ func (s *Server) EndSession(ss *Session) {
 	}
 	ss.Conn.Close()
 	if ss.User != nil {
-		s.log.info.Println("Terminating session for user", ss.User.UniqueIdentifier())
+		s.Log.info.Println("Terminating session for user", ss.User.UniqueIdentifier())
 	} else {
-		s.log.warn.Println("Terminating rogue sesssion")
+		s.Log.warn.Println("Terminating rogue sesssion")
 	}
 }
 
@@ -99,7 +110,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	socket, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		s.log.err.Println(err)
+		s.Log.err.Println(err)
 		return
 	}
 	ss := NewSession(socket)
