@@ -87,19 +87,6 @@ func (s *Server) EndSession(ss *Session) {
 	}
 }
 
-func (s *Server) NewChat(c *Chat) {
-	s.Lock()
-	s.Chats[c.ID] = c
-	s.Unlock()
-	go c.Write(s)
-}
-
-func (s *Server) NewUser(u *User) {
-	s.Lock()
-	s.Users[u.ID] = u
-	s.Unlock()
-}
-
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	upgrader := websocket.Upgrader{
 		ReadBufferSize:  1024,

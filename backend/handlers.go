@@ -1,6 +1,7 @@
 package main
 
 import (
+	r "github.com/dancannon/gorethink"
 	"github.com/mitchellh/mapstructure"
 )
 
@@ -41,6 +42,11 @@ type MessageRequest struct {
 	Text   string `json:"text"`
 }
 
+type UserChat struct {
+	UserID string `gorethink:"userId"`
+	ChatID string `gorethink:"chatId"`
+}
+
 func registerHandlers(s *Server) {
 	s.Handle("new_chat", authTest(handleNewChat))
 	s.Handle("set_user", authTest(handleSetUser))
@@ -59,6 +65,10 @@ func authTest(eh EventHandler) EventHandler {
 	}
 }
 
+func newUserChat(u *User, c *Chat) *UserChat {
+	return &UserChat{u.ID, c.ID}
+}
+
 func handleNewChat(s *Server, ss *Session, e *Event) {
 	var req NewChatRequest
 	if err := mapstructure.Decode(e.Data, &req); err != nil {
@@ -70,28 +80,37 @@ func handleNewChat(s *Server, ss *Session, e *Event) {
 		s.Log.err.Println(err)
 		return
 	}
-	s.NewChat(nc)
-	ss.User.RegisterChat(nc)
+	err = r.Table("chat").Insert(nc).Exec(s.DB)
+	if err != nil {
+		s.Log.err.Println(err)
+		return
+	}
+	err = r.Table("user_chat").Insert(newUserChat(ss.User, nc)).Exec(s.DB)
+	if err != nil {
+		s.Log.err.Println(err)
+		return
+	}
 	s.Log.info.Println("Created chat", nc.UniqueIdentifier(), "by", ss.User.UniqueIdentifier())
 	ss.Send <- NewEvent("chat_status", nc.GenerateStatus(s))
 }
 
 func handleMessage(s *Server, ss *Session, e *Event) {
-	var req MessageRequest
-	if err := mapstructure.Decode(e.Data, &req); err != nil {
-		s.Log.err.Println(err)
-		return
-	}
-	c, f := s.Chats[req.ChatID]
-	if !f {
-		s.Log.warn.Println("Message sent by user ", ss.User.ID, " to chat that doesn't exist ", req.ChatID)
-		return
-	}
-	if _, f = c.Users[ss.User.ID]; !f {
-		s.Log.warn.Println("Message sent by user ", ss.User.ID, " to chat that it isn't subscribed to ", req.ChatID)
-	}
-	resp := NewMessage(ss.User.ID, req.ChatID, req.Text)
-	c.Broadcast <- NewEvent("message", resp)
+	// var req MessageRequest
+	// if err := mapstructure.Decode(e.Data, &req); err != nil {
+	// 	s.Log.err.Println(err)
+	// 	return
+	// }
+	// c, f := s.Chats[req.ChatID]
+	// if !f {
+	// 	s.Log.warn.Println("Message sent by user ", ss.User.ID, " to chat that doesn't exist ", req.ChatID)
+	// 	return
+	// }
+	// if _, f = c.Users[ss.User.ID]; !f {
+	// 	s.Log.warn.Println("Message sent by user ", ss.User.ID, " to chat that it isn't subscribed to ", req.ChatID)
+	// }
+	// resp := NewMessage(ss.User.ID, req.ChatID, req.Text)
+	// c.Broadcast <- NewEvent("message", resp)
+	// TODO
 }
 
 func handleSetUser(s *Server, ss *Session, e *Event) {
@@ -110,16 +129,17 @@ func handleSetUser(s *Server, ss *Session, e *Event) {
 	sentMap := make(map[string]bool)
 	sentMap[ss.User.ID] = true
 	ss.Send <- evt
-	for _, c := range ss.User.Chats {
-		for _, u := range c.Users {
-			if _, sent := sentMap[u.ID]; !sent {
-				if uss, fss := s.Sessions[u.ID]; fss {
-					uss.Send <- evt
-				}
-				sentMap[u.ID] = true
-			}
-		}
-	}
+	// for _, c := range ss.User.Chats {
+	// 	for _, u := range c.Users {
+	// 		if _, sent := sentMap[u.ID]; !sent {
+	// 			if uss, fss := s.Sessions[u.ID]; fss {
+	// 				uss.Send <- evt
+	// 			}
+	// 			sentMap[u.ID] = true
+	// 		}
+	// 	}
+	// }
+	// TODO
 }
 
 func handleJoinChat(s *Server, ss *Session, e *Event) {
@@ -128,11 +148,37 @@ func handleJoinChat(s *Server, ss *Session, e *Event) {
 		s.Log.err.Println(err)
 		return
 	}
-	if c, f := s.Chats[req.ChatID]; f {
-		c.SubscribeUser(ss.User)
-		ss.User.RegisterChat(c)
-		s.Log.info.Println("User", ss.User.UniqueIdentifier(), "joined chat", c.UniqueIdentifier())
-		c.Broadcast <- NewEvent("chat_status", c.GenerateStatus(s))
+	var c *Chat
+	curs, err := r.Table("chat").Get(req.ChatID).Run(s.DB)
+	if err != nil {
+		s.Log.err.Println(err)
+		return
+	}
+	defer curs.Close()
+	err = curs.One(c)
+	if err != nil {
+		s.Log.err.Println(err)
+		return
+	}
+	if c == nil {
+		s.Log.warn.Println("User", ss.User.UniqueIdentifier(), "attempted to join non-existant chat", req.ChatID)
+		return
+	}
+	err = r.Table("user_chat").Insert(newUserChat(ss.User, c)).Exec(s.DB)
+	if err != nil {
+		s.Log.err.Println(err)
+		return
+	}
+	curs, err = r.Table("user_chat").GetAllByIndex("chatId", c.ID).Run(s.DB)
+	if err != nil {
+		s.Log.err.Println(err)
+		return
+	}
+	var u *User
+	for curs.Next(u) {
+		if nss, f := s.Sessions[u.ID]; f {
+			nss.Send <- NewEvent("chat_status", c.GenerateStatus(s))
+		}
 	}
 }
 
@@ -157,7 +203,8 @@ func handleAuthentication(s *Server, ss *Session, e *Event) {
 			return
 		}
 		ss.User = u
-		s.NewUser(u)
+		//s.NewUser(u)
+		// TODO
 	} else {
 		u, err = Authenticate(s, req.Token)
 		if err != nil {

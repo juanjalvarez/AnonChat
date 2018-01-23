@@ -1,11 +1,8 @@
 package main
 
-import "errors"
-
 type User struct {
-	ID    string
-	Name  string
-	Chats map[string]*Chat
+	ID   string `gorethink:"id",omitempty`
+	Name string `gorethink:"name"`
 }
 
 type UserStatus struct {
@@ -22,25 +19,20 @@ func NewUser() (*User, error) {
 	return &User{
 		string(newId),
 		"anonymous",
-		make(map[string]*Chat),
 	}, nil
 }
 
-func (u *User) RegisterChat(c *Chat) {
-	u.Chats[c.ID] = c
-}
-
 func (u *User) SendChats(s *Server) error {
-	ss, f := s.Sessions[u.ID]
-	if !f {
-		return errors.New("The user has no active session")
-	}
-	for _, c := range u.Chats {
-		ss.Send <- &Event{
-			"chat_status",
-			c.GenerateStatus(s),
-		}
-	}
+	// ss, f := s.Sessions[u.ID]
+	// if !f {
+	// 	return errors.New("The user has no active session")
+	// }
+	// for _, c := range u.Chats {
+	// 	ss.Send <- &Event{
+	// 		"chat_status",
+	// 		c.GenerateStatus(s),
+	// 	}
+	// }
 	return nil
 }
 
